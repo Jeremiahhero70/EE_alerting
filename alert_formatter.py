@@ -52,7 +52,7 @@ class AlertFormatter:
     
     @staticmethod
     def format_email(alert: Dict[str, Any]) -> str:
-        """Format alert into simple email body
+        """Format alert into formal email body
         
         Args:
             alert: Wazuh alert document
@@ -63,8 +63,12 @@ class AlertFormatter:
         try:
             fields = AlertFormatter.extract_fields(alert)
             
-            # Build email content
+            # Build email content with formal greeting
             email_lines = [
+                "Hello,",
+                "",
+                "We have received an alert from our monitoring system. Here are the details:",
+                "",
                 "=" * 70,
                 f"WAZUH ALERT - Level {fields.get('rule_level')}",
                 "=" * 70,
@@ -97,6 +101,9 @@ class AlertFormatter:
                 "=" * 70,
                 "Please investigate this alert.",
                 "=" * 70,
+                "",
+                "Best Regards,",
+                "Security Monitoring System",
             ])
             
             return "\n".join(email_lines)
