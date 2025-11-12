@@ -20,7 +20,7 @@ dashboard:
 # Alert Configuration
 alert_config:
   min_level: 12
-  lookback_hours: 24
+  lookback_hours: 1  # Initial query lookback - deduplication prevents re-sends
   
 # Client Configurations
 clients:

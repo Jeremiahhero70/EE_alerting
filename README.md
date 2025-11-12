@@ -79,13 +79,29 @@ clients:
 python3 alert_monitor.py
 ```
 
-This will:
-1. Load configuration from `mt_config.yaml`
-2. For each enabled client:
-   - Query for alerts with level 12+
-   - Extract key information (user, IP, country, etc)
-   - Select appropriate email template
-   - Send formatted email to configured recipients
+### How It Works
+
+1. **Query Phase**: Searches Wazuh for level 12+ alerts from the last `lookback_hours`
+2. **Deduplication Phase**: Checks `alert_cache/` directory for alerts already sent
+3. **Format Phase**: Selects appropriate email template based on alert type
+4. **Send Phase**: Sends formatted email to configured recipients
+5. **Cache Phase**: Records alert hash to prevent duplicate sends
+
+### Alert Deduplication
+
+The system prevents duplicate email alerts through:
+
+- **Daily cache files**: `alert_cache/alerts_YYYY-MM-DD.json` stores sent alert hashes
+- **Alert hash**: Unique identifier based on rule ID + agent ID + timestamp
+- **Automatic rotation**: Cache resets daily to prevent infinite history
+
+**Example**: If the same alert triggers every minute, the system only sends ONE email. Subsequent occurrences are skipped because they're already in the cache.
+
+### Configuration Notes
+
+- `lookback_hours`: Set to 1-2 hours for frequent monitoring (deduplication prevents re-sends)
+- `min_level`: 12 = medium/high, 13+ = critical (adjust as needed)
+- Cache directory is NOT gitignored so you can inspect alert history
 
 ## Email Templates
 
