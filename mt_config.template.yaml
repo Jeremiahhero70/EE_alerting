@@ -1,0 +1,35 @@
+# Multi-Tenant Wazuh Configuration - Alert System
+# Configuration for level 12+ alert forwarding to email
+# NOTE: Copy this file to mt_config.yaml and fill in your credentials
+
+# Global Email Configuration
+email_server: "smtp.gmail.com"
+email_port: 587
+email_sender: "your-email@gmail.com"
+email_password: "your-app-password"
+email_use_tls: true
+
+# Wazuh Dashboard Connection
+dashboard:
+  host: "https://your-wazuh-server/"
+  port: 9200
+  username: "admin"
+  password: "your-password"
+  verify_ssl: false
+
+# Alert Configuration
+alert_config:
+  min_level: 12
+  lookback_hours: 24
+  
+# Client Configurations
+clients:
+  lab:
+    enabled: false
+    email_recipients: 
+      - "recipient@example.com"
+  
+  homelab:
+    enabled: true
+    email_recipients: 
+      - "recipient@example.com"
