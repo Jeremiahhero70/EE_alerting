@@ -99,16 +99,31 @@ class AlertCache:
     def _get_alert_hash(self, alert: Dict[str, Any]) -> str:
         """Generate unique hash for alert to prevent duplicates
         
+        Uses time-bucketing (hourly) to prevent duplicate alerts within the same hour
+        while still alerting for same issue at different hours.
+        
         Args:
             alert: Wazuh alert document
             
         Returns:
             Hash string
         """
+        timestamp = alert.get('timestamp', '')
+        
+        # Round timestamp to nearest hour for time-bucketing
+        # e.g., 14:30:45 → 14:00:00, 16:15:22 → 16:00:00
+        if timestamp:
+            try:
+                dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00').replace('+0000', '+00:00'))
+                hour_bucket = dt.replace(minute=0, second=0, microsecond=0)
+                timestamp = hour_bucket.isoformat()
+            except:
+                pass  # Fall back to original timestamp if parsing fails
+        
         key_parts = [
             alert.get('rule', {}).get('id', ''),
             alert.get('agent', {}).get('id', ''),
-            alert.get('timestamp', ''),
+            timestamp,  # Now bucketed to the hour
         ]
         key_str = '|'.join(str(p) for p in key_parts)
         return hashlib.md5(key_str.encode()).hexdigest()
