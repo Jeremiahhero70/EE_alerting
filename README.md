@@ -89,13 +89,44 @@ python3 alert_monitor.py
 
 ### Alert Deduplication
 
-The system prevents duplicate email alerts through:
+The system prevents duplicate email alerts using a **smart hash-based cache** system:
 
-- **Daily cache files**: `alert_cache/alerts_YYYY-MM-DD.json` stores sent alert hashes
-- **Alert hash**: Unique identifier based on rule ID + agent ID + timestamp
-- **Automatic rotation**: Cache resets daily to prevent infinite history
+#### How It Works
 
-**Example**: If the same alert triggers every minute, the system only sends ONE email. Subsequent occurrences are skipped because they're already in the cache.
+1. **Alert Fingerprinting**: For each alert, the system combines:
+   ```
+   Rule ID | Agent ID | Timestamp → MD5 Hash
+   ```
+   Example: `5401|002|2025-11-12T01:00:00` → `9ab5f710374d9cfbf965e53e7c797c47`
+
+2. **Cache Checking**: Before sending an email:
+   - Generates hash from the alert
+   - Checks if hash exists in today's cache file
+   - If found → **Skip email** (already sent)
+   - If new → **Send email** and add hash to cache
+
+3. **Daily Rotation**: Cache files reset each day
+   - `alert_cache/alerts_2025-11-12.json` → stored sent alert hashes
+   - New day = new file, preventing infinite history
+
+#### Why Hashing?
+
+- **Speed**: Hash comparison is instant (no data parsing)
+- **Efficiency**: Small hash size vs storing full alert data
+- **Accuracy**: Same alert = same hash (reliable deduplication)
+- **Security**: Raw credentials/IPs not exposed in cache files
+
+#### Example Scenario
+
+Same authentication failure triggers every 5 minutes:
+```
+1st minute  → Hash generated → Email sent ✉️  → Hash stored in cache
+5th minute  → Hash exists in cache → Email skipped ⏭️
+10th minute → Hash exists in cache → Email skipped ⏭️
+15th minute → Hash exists in cache → Email skipped ⏭️
+```
+
+**Result**: Only 1 email sent instead of 4, reducing alert fatigue!
 
 ### Configuration Notes
 
