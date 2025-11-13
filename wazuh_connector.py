@@ -58,6 +58,11 @@ class WazuhAlertConnector:
             index_pattern = f"{client_name}:wazuh-alerts-*"
             search_url = f"{self.base_url}/{index_pattern}/_search"
             
+            # Convert hours to minutes for better precision with small values
+            minutes = int(hours * 60)
+            if minutes < 1:
+                minutes = 1  # Minimum 1 minute
+            
             # Query for alerts with minimum level
             query = {
                 "query": {
@@ -73,7 +78,7 @@ class WazuhAlertConnector:
                             {
                                 "range": {
                                     "timestamp": {
-                                        "gte": f"now-{hours}h",
+                                        "gte": f"now-{minutes}m",
                                         "lt": "now"
                                     }
                                 }
